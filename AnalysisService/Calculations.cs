@@ -4,9 +4,14 @@ using System.Text;
 
 namespace AnalysisService
 {
-    class Communication
+    class Calculations
     {
-        public Communication()
+        public Calculations()
+        {
+
+        }
+
+        public static float AveragePointsNow()
         {
 
         }
