@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace AnalysisService
 {
     class Datamanager
     {
+
         public record class RedisData
         (
             user userinfo,
@@ -32,14 +35,65 @@ namespace AnalysisService
             float points
         );
 
-        public static string SerializeJson(RedisData data)
+        public static string SerializeJson<T>(T data)
         {
             return JsonSerializer.Serialize(data);
         }
 
-        public static RedisData DeserializeJson(string json)
+        public static List<string> SerializeJsons<T>(List<T> data)
         {
-            return JsonSerializer.Deserialize<RedisData>(json);
+            List<string> jsonstrings = new List<string>();
+            foreach (T t in data)
+            {
+                jsonstrings.Add(SerializeJson<T>(t));
+            }
+
+            return jsonstrings;
+        }
+
+        public static T DeserializeJson<T>(string json)
+        {
+            return JsonSerializer.Deserialize<T>(json);
+        }
+
+        public static List<T> DeserializeJsons<T>(List<string> jsons)
+        {
+            List<T> data = new List<T>();
+            foreach (string json in jsons)
+            {
+                data.Add(DeserializeJson<T>(json));
+            }
+
+            return data;
+        }
+
+        public static Dictionary<business, List<RedisData>> SortByBusiness(List<RedisData> users, Dictionary<float, business> id_businesses)
+        {
+            Dictionary<business, List<RedisData>> businessdata = new Dictionary<business, List<RedisData>>();
+            foreach (KeyValuePair<float,business> b in id_businesses)
+            {
+                businessdata.Add(b.Value, new List<RedisData>());
+            }
+            foreach (RedisData user in users)
+            {
+                foreach (pointholder p in user.points)
+                {
+                    businessdata[id_businesses[p.business_id]].Add(user);
+                }
+            }
+
+            return businessdata;
+        }
+
+        public static Dictionary<float, business> GetIDtoBusinesses(List<business> businesses)
+        {
+            Dictionary<float, business> id_business = new Dictionary<float, business>();
+            foreach (business b in businesses)
+            {
+                id_business.Add(b.id, b);
+            }
+
+            return id_business;
         }
     }
 }
